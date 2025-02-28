@@ -2,6 +2,43 @@
 
 void putchar(char ch);
 
+void *memset(void *buf, char c, size_t n) {
+    // Fill first n bytes of buf with c
+    uint8_t *p = (uint8_t *) buf;
+    while (n--) *p++ = c;
+    return buf;
+}
+
+void *memcpy(void *dst, const void *src, size_t n) {
+    // Copy n bytes from src to dst
+    uint8_t *d = (uint8_t *) dst;
+    const uint8_t *s = (const uint8_t *) src;
+    while (n--) *d++ = *s++;
+    return dst;
+}
+
+char *strcpy(char *dst, const char *src) {
+    // Copies string from src to dst
+    char *d = dst;
+    while (*src) *d++ = *src++;
+    *d = '\0';
+    return dst;
+}
+
+int strcmp(const char *s1, const char *s2) {
+    // Compares s1 and s2
+    // s1 == s2 -> return 0
+    // s1 > s2 -> return positive value
+    // s1 < s2 -> return negative value
+    while (*s1 && *s2) {
+        if (*s1 != *s2) break;
+        s1++;
+        s2++;
+    }
+
+    return *(unsigned char *)s1 - *(unsigned char *)s2;
+}
+
 void printf(const char *fmt, ...) {
     va_list vargs;
     va_start(vargs, fmt);
