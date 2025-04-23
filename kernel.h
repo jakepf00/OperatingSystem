@@ -2,6 +2,13 @@
 
 #include "common.h"
 
+#define SATP_SV32 (1u << 31)
+#define PAGE_V (1 << 0) // "Valid" bit (entry is enabled)
+#define PAGE_R (1 << 1) // Readable
+#define PAGE_W (1 << 2) // Writable
+#define PAGE_X (1 << 3) // Executable
+#define PAGE_U (1 << 4) // User (accessible in user mode)
+
 struct trap_frame {
     uint32_t ra;
     uint32_t gp;
@@ -70,5 +77,9 @@ struct process {
     int pid; // Process ID
     int state; // Process state: PROC_UNUSED or PROC_RUNNABLE
     vaddr_t sp; // Stack pointer
+    uint32_t *page_table; // First level page table
     uint8_t stack[8192]; // Kernel stack
 };
+
+
+paddr_t alloc_pages(uint32_t n);
