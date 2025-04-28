@@ -2,8 +2,10 @@
 
 extern char __stack_top[];
 
-__attribute((noreturn)) void exit(void) {
-    for (;;);
+__attribute((noreturn))
+void exit(void) {
+    syscall(SYS_EXIT, 0, 0, 0);
+    for (;;); // Just in case!
 }
 
 void putchar(char ch) {
