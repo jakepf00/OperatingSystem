@@ -1,5 +1,4 @@
 #pragma once
-
 #include "common.h"
 
 #define SATP_SV32 (1u << 31)
@@ -10,10 +9,16 @@
 #define PAGE_U (1 << 4) // User (accessible in user mode)
 #define SSTATUS_SPIE (1 << 5)
 #define SSTATUS_SUM (1 << 18)
-
 #define USER_BASE 0x1000000
 #define SCAUSE_ECALL 8
 #define PROC_EXITED 2
+#define PROCS_MAX 8 // Maximum number of processes
+#define PROC_UNUSED 0 // Unused process control structure
+#define PROC_RUNNABLE 1 // Runnable process
+
+// tar definitions
+#define FILES_MAX 2
+#define DISK_MAX_SIZE align_up(sizeof(struct file) * FILES_MAX, SECTOR_SIZE)
 
 // Virtio definitions
 #define SECTOR_SIZE 512
@@ -88,10 +93,6 @@ struct virtio_blk_req {
     uint8_t data[512];
     uint8_t status;
 } __attribute__((packed));
-
-// tar definitions
-#define FILES_MAX 2
-#define DISK_MAX_SIZE align_up(sizeof(struct file) * FILES_MAX, SECTOR_SIZE)
 
 struct tar_header {
     char name[100];
@@ -183,9 +184,6 @@ struct sbiret {
     long value;
 };
 
-#define PROCS_MAX 8 // Maximum number of processes
-#define PROC_UNUSED 0 // Unused process control structure
-#define PROC_RUNNABLE 1 // Runnable process
 struct process {
     int pid; // Process ID
     int state; // Process state: PROC_UNUSED or PROC_RUNNABLE
@@ -196,3 +194,30 @@ struct process {
 
 
 paddr_t alloc_pages(uint32_t n);
+uint32_t virtio_reg_read32(unsigned offset);
+uint64_t virtio_reg_read64(unsigned offset);
+void virtio_reg_write32(unsigned offset, uint32_t value);
+void virtio_reg_fetch_and_or32(unsigned offset, uint32_t value);
+struct virtio_virtq *virtq_init(unsigned index);
+void virtio_blk_init(void);
+void virtq_kick(struct virtio_virtq *vq, int desc_index);
+bool virtq_is_busy(struct virtio_virtq *vq);
+void read_write_disk(void *buf, unsigned sector, int is_write);
+int oct2int(char *oct, int len);
+void fs_init(void);
+void fs_flush(void);
+struct file *fs_lookup(const char *filename);
+void map_page(uint32_t *table1, uint32_t vaddr, paddr_t paddr, uint32_t flags);
+__attribute__((naked)) void switch_context(uint32_t *prev_sp, uint32_t *next_sp);
+__attribute__((naked)) void user_entry(void);
+struct process *create_process(const void *image, size_t image_size);
+void yield(void);
+paddr_t alloc_pages(uint32_t n);
+struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4, long arg5, long fid, long eid);
+void putchar(char ch);
+long getchar(void);
+__attribute__((naked)) __attribute__((aligned(4))) void kernel_entry(void);
+void handle_syscall(struct trap_frame *f);
+void handle_trap(struct trap_frame *f);
+void kernel_main(void);
+__attribute__((section(".text.boot"))) __attribute__((naked)) void boot(void);

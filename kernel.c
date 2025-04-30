@@ -1,7 +1,8 @@
 #include "kernel.h"
 #include "common.h"
 
-extern char __bss[], __bss_end[], __stack_top[];
+extern char __bss[], __bss_end[];
+extern char __stack_top[];
 extern char __free_ram[], __free_ram_end[];
 extern char __kernel_base[];
 extern char _binary_shell_bin_start[], _binary_shell_bin_size[];
@@ -256,8 +257,7 @@ void map_page(uint32_t *table1, uint32_t vaddr, paddr_t paddr, uint32_t flags) {
   table0[vpn0] = ((paddr / PAGE_SIZE) << 10) | flags | PAGE_V;
 }
 
-__attribute__((naked)) void switch_context(uint32_t *prev_sp,
-                                           uint32_t *next_sp) {
+__attribute__((naked)) void switch_context(uint32_t *prev_sp, uint32_t *next_sp) {
   __asm__ __volatile__(
       // Save callee-saved registers onto the current process's stack
       "addi sp, sp, -13 * 4\n" // Allocate stack space for 13 4-byte registers
@@ -417,8 +417,7 @@ paddr_t alloc_pages(uint32_t n) {
   return paddr;
 }
 
-struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4,
-                       long arg5, long fid, long eid) {
+struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4, long arg5, long fid, long eid) {
   register long a0 __asm__("a0") = arg0;
   register long a1 __asm__("a1") = arg1;
   register long a2 __asm__("a2") = arg2;
@@ -592,33 +591,6 @@ void handle_trap(struct trap_frame *f) {
   }
 
   WRITE_CSR(sepc, user_pc);
-}
-
-void delay(void) {
-  for (int i = 0; i < 30000000; i++) {
-    __asm__ __volatile__("nop");
-  }
-}
-
-struct process *proc_a;
-struct process *proc_b;
-
-void proc_a_entry(void) {
-  printf("starting process A\n");
-  while (1) {
-    putchar('A');
-    delay();
-    yield();
-  }
-}
-
-void proc_b_entry(void) {
-  printf("starting process B\n");
-  while (1) {
-    putchar('B');
-    delay();
-    yield();
-  }
 }
 
 void kernel_main(void) {
